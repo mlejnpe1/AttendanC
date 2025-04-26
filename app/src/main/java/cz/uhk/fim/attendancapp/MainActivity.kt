@@ -1,4 +1,4 @@
-package cz.uhk.fim.cryptoapp
+package cz.uhk.fim.attendancapp
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -19,14 +19,13 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import cz.uhk.fim.cryptoapp.screens.CryptoListScreen
-import cz.uhk.fim.cryptoapp.ui.theme.CryptoAppTheme
+import cz.uhk.fim.attendancapp.ui.theme.AttendancAppTheme
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            CryptoAppTheme {
+            AttendancAppTheme {
                 val navController = rememberNavController()
                 MainScreen(navController)
             }
@@ -69,7 +68,7 @@ fun Navigation(navController: NavHostController, innerPadding: PaddingValues) {
 @Preview(showBackground = true)
 @Composable
 fun MainScreenPreview() {
-    CryptoAppTheme {
+    AttendancAppTheme {
         MainScreen(rememberNavController())
     }
 }

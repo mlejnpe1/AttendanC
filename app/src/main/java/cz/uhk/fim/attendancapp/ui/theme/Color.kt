@@ -1,4 +1,4 @@
-package cz.uhk.fim.cryptoapp.ui.theme
+package cz.uhk.fim.attendancapp.ui.theme
 
 import androidx.compose.ui.graphics.Color
 

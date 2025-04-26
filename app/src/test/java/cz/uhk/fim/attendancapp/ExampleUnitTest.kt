@@ -1,4 +1,4 @@
-package cz.uhk.fim.cryptoapp
+package cz.uhk.fim.attendancapp
 
 import org.junit.Test
 

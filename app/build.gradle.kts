@@ -6,11 +6,11 @@ plugins {
 }
 
 android {
-    namespace = "cz.uhk.fim.cryptoapp"
+    namespace = "cz.uhk.fim.attendancapp"
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "cz.uhk.fim.cryptoapp"
+        applicationId = "cz.uhk.fim.attendancapp"
         minSdk = 24
         targetSdk = 35
         versionCode = 1
