@@ -13,29 +13,36 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
-import cz.uhk.fim.attendancapp.model.Trip
+import cz.uhk.fim.attendancapp.viewmodel.TripsViewModel
+import org.koin.androidx.compose.koinViewModel
 
 @Composable
 fun TripsScreen(navController: NavHostController){
-    val mockTrips = listOf(
-        Trip(1, "Výprava na Sněžku", "2025-05-10", "Krkonoše"),
-        Trip(2, "Tábor u Berounky", "2025-07-01", "Berounka"),
-        Trip(3, "Výprava do Brd", "2025-09-15", "Brdy")
-    )
+    val viewModel: TripsViewModel = koinViewModel()
+    val trips by viewModel.trips.collectAsState(initial = emptyList())
+
+    LaunchedEffect (Unit){
+        viewModel.loadTrips()
+    }
+
 
     Column(modifier = Modifier.padding(16.dp)) {
         Text("Seznam výprav", style = MaterialTheme.typography.headlineMedium)
         Spacer(modifier = Modifier.height(16.dp))
+
         LazyColumn {
-            items(mockTrips) { trip ->
+            items(trips) { trip ->
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(vertical = 8.dp)
-                        .clickable {navController.navigate("tripDetail/${trip.id}")},
+                        .clickable { navController.navigate("tripDetail/${trip.id}") },
                     colors = CardDefaults.cardColors(
                         containerColor = MaterialTheme.colorScheme.primaryContainer
                     )

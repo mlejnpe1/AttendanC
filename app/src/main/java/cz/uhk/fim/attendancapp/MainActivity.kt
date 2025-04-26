@@ -23,16 +23,25 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import cz.uhk.fim.attendancapp.di.appModule
 import cz.uhk.fim.attendancapp.screens.HomeScreen
 import cz.uhk.fim.attendancapp.screens.MeetingDetailScreen
 import cz.uhk.fim.attendancapp.screens.MeetingsScreen
 import cz.uhk.fim.attendancapp.screens.TripDetailScreen
 import cz.uhk.fim.attendancapp.screens.TripsScreen
 import cz.uhk.fim.attendancapp.ui.theme.AttendancAppTheme
+import org.koin.android.ext.koin.androidContext
+import org.koin.core.context.startKoin
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        startKoin {
+            androidContext(this@MainActivity)
+            modules(appModule)
+        }
+
         setContent {
             AttendancAppTheme {
                 val navController = rememberNavController()

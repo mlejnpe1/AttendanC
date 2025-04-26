@@ -2,7 +2,7 @@ package cz.uhk.fim.attendancapp.repository
 
 import cz.uhk.fim.attendancapp.model.Trip
 
-class TripRepository {
+class TripsRepository {
     private val trips = listOf(
         Trip(1, "Výprava na Sněžku", "2025-05-10", "Krkonoše"),
         Trip(2, "Tábor u Berounky", "2025-07-01", "Berounka"),

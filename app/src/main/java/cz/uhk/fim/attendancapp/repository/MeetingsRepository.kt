@@ -2,7 +2,7 @@ package cz.uhk.fim.attendancapp.repository
 
 import cz.uhk.fim.attendancapp.model.Meeting
 
-class MeetingRepository {
+class MeetingsRepository {
     private val meetings = listOf(
         Meeting(1, "Schůzka vlčat", "2025-04-30", "Herní schůzka v klubovně"),
         Meeting(2, "Schůzka světlušek", "2025-05-05", "Tvořivá dílna"),
