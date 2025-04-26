@@ -11,21 +11,30 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
+import cz.uhk.fim.attendancapp.viewmodel.TripsViewModel
+import org.koin.androidx.compose.koinViewModel
 
 @Composable
 fun TripDetailScreen(tripId: Int?, navController: NavHostController) {
+    val viewModel: TripsViewModel = koinViewModel()
+    val trip = tripId?.let { viewModel.getTripById(it) }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
             .padding(16.dp)
     ) {
-        Text(
-            text = "Detail výpravy",
-            style = MaterialTheme.typography.headlineMedium
-        )
-        Spacer(modifier = Modifier.height(16.dp))
-        Text("ID výpravy: $tripId", style = MaterialTheme.typography.headlineSmall)
-
-        // Sem později můžeš doplnit další informace o výpravě (datum, místo, počasí, atd.)
+        if (trip != null){
+            Text(
+                text = "Detail výpravy",
+                style = MaterialTheme.typography.headlineMedium
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+            Text("Název: ${trip.title}", style = MaterialTheme.typography.titleLarge)
+            Text("Datum: ${trip.date}")
+            Text("Místo: ${trip.location}")
+        }else{
+            Text("Výprava nebyla nalezena", style = MaterialTheme.typography.bodyLarge)
+        }
     }
 }
