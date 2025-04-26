@@ -92,7 +92,11 @@ fun Navigation(navController: NavHostController, innerPadding: PaddingValues) {
         }
         composable("tripDetail/{tripId}") { backStackEntry ->
             val tripId = backStackEntry.arguments?.getString("tripId")?.toIntOrNull()
-            TripDetailScreen(tripId, navController)
+            if (tripId != null) {
+                TripDetailScreen(tripId = tripId, navController = navController)
+            } else {
+                Text("Neplatné ID výpravy")
+            }
         }
     }
 }

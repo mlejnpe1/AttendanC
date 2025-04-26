@@ -26,10 +26,10 @@ import cz.uhk.fim.attendancapp.model.Trip
 import java.util.Calendar
 
 @Composable
-fun AddTripDialog(onDismiss: () -> Unit, onSave: (Trip) -> Unit, existingTrips: List<Trip>) {
-    var title by remember { mutableStateOf("") }
-    var selectedDate by remember { mutableStateOf("") }
-    var location by remember { mutableStateOf("") }
+fun AddTripDialog(onDismiss: () -> Unit, onSave: (Trip) -> Unit, existingTrips: List<Trip>, existingTrip: Trip? = null) {
+    var title by remember { mutableStateOf(existingTrip?.title ?: "") }
+    var selectedDate by remember { mutableStateOf(existingTrip?.date ?: "") }
+    var location by remember { mutableStateOf(existingTrip?.location ?: "") }
 
     val context = LocalContext.current
 
@@ -101,18 +101,13 @@ fun AddTripDialog(onDismiss: () -> Unit, onSave: (Trip) -> Unit, existingTrips: 
             Button(
                 onClick = {
                     if (title.isNotBlank() && selectedDate.isNotBlank() && location.isNotBlank()) {
-                        val maxId = existingTrips.maxOfOrNull { it.id } ?: 0
-                        val newTrip = Trip(
-                            id = maxId + 1,
-                            title = title,
-                            date = selectedDate,
-                            location = location
-                        )
+                        val id = existingTrip?.id ?: (existingTrips.maxOfOrNull { it.id } ?: 0) + 1
+                        val newTrip = Trip(id = id, title = title, date = selectedDate, location = location)
                         onSave(newTrip)
                     }
                 }
             ) {
-                Text("Uložit")
+                Text(if (existingTrip == null) "Uložit" else "Upravit")
             }
         },
         dismissButton = {

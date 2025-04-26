@@ -8,6 +8,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
@@ -15,9 +18,14 @@ import cz.uhk.fim.attendancapp.viewmodel.TripsViewModel
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
-fun TripDetailScreen(tripId: Int?, navController: NavHostController) {
+fun TripDetailScreen(tripId: Int, navController: NavHostController) {
     val viewModel: TripsViewModel = koinViewModel()
-    val trip = tripId?.let { viewModel.getTripById(it) }
+    val trips by viewModel.trips.collectAsState()
+    val trip = trips.find { it.id == tripId }
+
+    LaunchedEffect(Unit) {
+        viewModel.loadTrips()
+    }
 
     Column(
         modifier = Modifier
