@@ -6,19 +6,29 @@ import cz.uhk.fim.attendancapp.model.Meeting
 import cz.uhk.fim.attendancapp.repository.MeetingsRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
 class MeetingsViewModel(private val repository: MeetingsRepository) : ViewModel() {
     private val _meetings = MutableStateFlow<List<Meeting>>(emptyList())
     val meetings: StateFlow<List<Meeting>> = _meetings
 
-    fun loadMeetings(){
+
+    fun loadMeetings() {
         viewModelScope.launch {
-            _meetings.value = repository.getMeetings()
+            repository.getMeetings().collectLatest { meetingList ->
+                _meetings.value = meetingList
+            }
         }
     }
 
     fun getMeetingById(id: Int): Meeting? {
-        return repository.getMeetingById(id)
+        return _meetings.value.find { it.id == id }
+    }
+
+    fun saveMeetings(newMeetings: List<Meeting>) {
+        viewModelScope.launch {
+            repository.saveMeetings(newMeetings)
+        }
     }
 }

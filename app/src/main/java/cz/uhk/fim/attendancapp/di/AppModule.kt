@@ -1,5 +1,6 @@
 package cz.uhk.fim.attendancapp.di
 
+import cz.uhk.fim.attendancapp.data.local.MeetingsDataStore
 import cz.uhk.fim.attendancapp.data.local.TripsDataStore
 import cz.uhk.fim.attendancapp.repository.MeetingsRepository
 import cz.uhk.fim.attendancapp.repository.TripsRepository
@@ -11,7 +12,9 @@ import org.koin.dsl.module
 val appModule = module{
     single { TripsDataStore(get()) }
     single { TripsRepository(get()) }
+    single { MeetingsDataStore(get()) }
+    single { MeetingsRepository(get()) }
 
-    viewModel { MeetingsViewModel(get()) }
     viewModel { TripsViewModel(get()) }
+    viewModel { MeetingsViewModel(get()) }
 }

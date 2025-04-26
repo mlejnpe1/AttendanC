@@ -1,15 +1,13 @@
 package cz.uhk.fim.attendancapp.repository
 
+import cz.uhk.fim.attendancapp.data.local.MeetingsDataStore
 import cz.uhk.fim.attendancapp.model.Meeting
+import kotlinx.coroutines.flow.Flow
 
-class MeetingsRepository {
-    private val meetings = listOf(
-        Meeting(1, "Schůzka vlčat", "2025-04-30", "Herní schůzka v klubovně"),
-        Meeting(2, "Schůzka světlušek", "2025-05-05", "Tvořivá dílna"),
-        Meeting(3, "Společná schůzka", "2025-05-12", "Výprava do přírody")
-    )
+class MeetingsRepository(private val dataStore: MeetingsDataStore) {
+    fun getMeetings(): Flow<List<Meeting>> = dataStore.getMeetings()
 
-    fun getMeetings(): List<Meeting> = meetings
-
-    fun getMeetingById(id: Int): Meeting? = meetings.find { it.id == id }
+    suspend fun saveMeetings(meetings: List<Meeting>) {
+        dataStore.saveMeetings(meetings)
+    }
 }

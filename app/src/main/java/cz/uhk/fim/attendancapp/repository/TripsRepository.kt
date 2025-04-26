@@ -11,8 +11,4 @@ class TripsRepository (private val tripsDataStore: TripsDataStore){
     suspend fun saveTrips(trips: List<Trip>) {
         tripsDataStore.saveTrips(trips)
     }
-
-    suspend fun getTripById(id: Int): Trip? {
-        return tripsDataStore.getTrips().first().find { it.id == id }
-    }
 }
