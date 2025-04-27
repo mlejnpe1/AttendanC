@@ -46,7 +46,8 @@ fun MeetingsScreen(navController: NavHostController) {
     val viewModel: MeetingsViewModel = koinViewModel()
     val meetings by viewModel.meetings.collectAsState(initial = emptyList())
     val participants by viewModel.participants.collectAsState(initial = emptyList())
-    var showDialog by remember { mutableStateOf(false) }
+    var showAddEditDialog by remember { mutableStateOf(false) }
+    var showDeleteDialog by remember { mutableStateOf(false) }
     var meetingToDelete by remember { mutableStateOf<Meeting?>(null) }
     var meetingToEdit by remember { mutableStateOf<Meeting?>(null) }
     var showSnackbar by remember { mutableStateOf(false) }
@@ -62,7 +63,7 @@ fun MeetingsScreen(navController: NavHostController) {
         floatingActionButton = {
             FloatingActionButton(onClick = {
                 meetingToEdit = null
-                showDialog = true
+                showAddEditDialog = true
             }) {
                 Icon(Icons.Default.Add, contentDescription = "Přidat schůzku")
             }
@@ -89,11 +90,11 @@ fun MeetingsScreen(navController: NavHostController) {
                         navController = navController,
                         onEdit = {
                             meetingToEdit = meeting
-                            showDialog = true
+                            showAddEditDialog = true
                         },
                         onDelete = {
                             meetingToDelete = meeting
-                            showDialog = true
+                            showDeleteDialog = true
                         }
                     )
                 }
@@ -101,10 +102,9 @@ fun MeetingsScreen(navController: NavHostController) {
         }
     }
 
-    // Dialog pro přidání / editaci
-    if (showDialog) {
+    if (showAddEditDialog) {
         AddMeetingDialog(
-            onDismiss = { showDialog = false },
+            onDismiss = { showAddEditDialog = false },
             onSave = { newMeeting ->
                 val participantsList = participants.map { participant ->
                     MeetingParticipant(participantId = participant.id, isPresent = false)
@@ -124,7 +124,7 @@ fun MeetingsScreen(navController: NavHostController) {
                     meetings + meetingWithParticipants
                 }
                 viewModel.saveMeetings(finalMeetings)
-                showDialog = false
+                showAddEditDialog = false
                 meetingToEdit = null
                 showSnackbar = true
             },
@@ -133,7 +133,6 @@ fun MeetingsScreen(navController: NavHostController) {
         )
     }
 
-    // Snackbar zobrazení
     if (showSnackbar) {
         LaunchedEffect(Unit) {
             coroutineScope.launch {
@@ -143,11 +142,10 @@ fun MeetingsScreen(navController: NavHostController) {
         }
     }
 
-    // Dialog pro smazání
     if (meetingToDelete != null) {
         AlertDialog(
             onDismissRequest = {
-                showDialog = false
+                showDeleteDialog = false
                 meetingToDelete = null
             },
             title = { Text("Smazat schůzku") },
@@ -155,7 +153,7 @@ fun MeetingsScreen(navController: NavHostController) {
             confirmButton = {
                 TextButton(onClick = {
                     viewModel.saveMeetings(meetings.filter { it.id != meetingToDelete!!.id })
-                    showDialog = false
+                    showDeleteDialog = false
                     meetingToDelete = null
                 }) {
                     Text("Smazat")
@@ -163,7 +161,7 @@ fun MeetingsScreen(navController: NavHostController) {
             },
             dismissButton = {
                 TextButton(onClick = {
-                    showDialog = false
+                    showDeleteDialog = false
                     meetingToDelete = null
                 }) {
                     Text("Zrušit")

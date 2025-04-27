@@ -34,6 +34,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -41,39 +42,42 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import cz.uhk.fim.attendancapp.model.Trip
 import cz.uhk.fim.attendancapp.viewmodel.TripsViewModel
+import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
 fun TripsScreen(navController: NavHostController){
     val viewModel: TripsViewModel = koinViewModel()
     val trips by viewModel.trips.collectAsState(initial = emptyList())
-    var showDialog by remember { mutableStateOf(false) }
+    var showAddEditDialog by remember { mutableStateOf(false) }
+    var showDeleteDialog by remember { mutableStateOf(false) }
     var tripToDelete by remember { mutableStateOf<Trip?>(null) }
     var tripToEdit by remember { mutableStateOf<Trip?>(null) }
     var showSnackbar by remember { mutableStateOf(false) }
+
     val snackbarHostState = remember { SnackbarHostState() }
+    val coroutineScope = rememberCoroutineScope()
 
     LaunchedEffect (Unit){
         viewModel.loadTrips()
     }
 
-    Scaffold (
-        snackbarHost = {
-            Box(modifier = Modifier.fillMaxSize()) {
-            SnackbarHost(
-                hostState = snackbarHostState,
-                modifier = Modifier
-                    .align(Alignment.TopCenter)
-                    .padding(top = 64.dp)
-            )
-        }},
+    Scaffold(
         floatingActionButton = {
             FloatingActionButton(onClick = {
                 tripToEdit = null
-                showDialog = true
+                showAddEditDialog = true
             }) {
                 Icon(Icons.Default.Add, contentDescription = "Přidat výpravu")
             }
+        },
+        bottomBar = {
+            SnackbarHost(
+                hostState = snackbarHostState,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(8.dp)
+            )
         }
     ) { innerPadding ->
         Column(
@@ -87,79 +91,26 @@ fun TripsScreen(navController: NavHostController){
 
             LazyColumn {
                 items(trips) { trip ->
-                    Card(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 8.dp)
-                            .clickable { navController.navigate("tripDetail/${trip.id}") },
-                        colors = CardDefaults.cardColors(
-                            containerColor = MaterialTheme.colorScheme.primaryContainer
-                        )
-                    ){
-                        Column(
-                            modifier = Modifier
-                                .padding(16.dp)
-                                .fillMaxWidth()
-                        ) {
-                            Text(
-                                text = trip.title,
-                                style = MaterialTheme.typography.titleLarge,
-                                modifier = Modifier.padding(bottom = 8.dp)
-                            )
-
-                            Text(
-                                text = "📅 Datum: ${trip.date}",
-                                style = MaterialTheme.typography.bodyMedium,
-                                modifier = Modifier.padding(bottom = 4.dp)
-                            )
-
-                            Text(
-                                text = "📍 Místo: ${trip.location}",
-                                style = MaterialTheme.typography.bodyMedium,
-                                modifier = Modifier.padding(bottom = 12.dp)
-                            )
-
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.End,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                IconButton(
-                                    onClick = {
-                                        tripToEdit = trip
-                                        showDialog = true
-                                    }
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Default.Edit,
-                                        contentDescription = "Upravit výpravu",
-                                        tint = MaterialTheme.colorScheme.primary
-                                    )
-                                }
-                                IconButton(
-                                    onClick = {
-                                        tripToDelete = trip
-                                        showDialog = true
-                                    }
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Default.Delete,
-                                        contentDescription = "Smazat výpravu",
-                                        tint = MaterialTheme.colorScheme.error
-                                    )
-                                }
-                            }
+                    TripCard(
+                        trip = trip,
+                        navController = navController,
+                        onEdit = {
+                            tripToEdit = trip
+                             showAddEditDialog = true
+                        },
+                        onDelete = {
+                            tripToDelete = trip
+                            showDeleteDialog = true
                         }
-
-                    }
+                    )
                 }
             }
         }
     }
 
-    if (showDialog) {
+    if (showAddEditDialog) {
         AddTripDialog(
-            onDismiss = { showDialog = false},
+            onDismiss = { showAddEditDialog = false },
             onSave = { newTrip ->
                 val updatedTrips = trips.map { existingTrip ->
                     if (existingTrip.id == newTrip.id) newTrip else existingTrip
@@ -170,30 +121,36 @@ fun TripsScreen(navController: NavHostController){
                     trips + newTrip
                 }
                 viewModel.saveTrips(finalTrips)
-                showDialog = false
+                showAddEditDialog = false
                 tripToEdit = null
+                showSnackbar = true
             },
             existingTrips = trips,
             existingTrip = tripToEdit
         )
     }
 
-    if(showSnackbar){
-        LaunchedEffect(snackbarHostState) {
-            snackbarHostState.showSnackbar("Výprava byla úspěšně přidána!")
-            showSnackbar = false
+    if (showSnackbar) {
+        LaunchedEffect(Unit) {
+            coroutineScope.launch {
+                snackbarHostState.showSnackbar("Výprava byla úspěšně přidána!")
+                showSnackbar = false
+            }
         }
     }
 
-    if (showDialog && tripToDelete != null) {
+    if (tripToDelete != null) {
         AlertDialog(
-            onDismissRequest = { showDialog = false },
+            onDismissRequest = {
+                showDeleteDialog = false
+                tripToDelete = null
+            },
             title = { Text("Smazat výpravu") },
             text = { Text("Opravdu chceš smazat výpravu '${tripToDelete!!.title}'?") },
             confirmButton = {
                 TextButton(onClick = {
                     viewModel.saveTrips(trips.filter { it.id != tripToDelete!!.id })
-                    showDialog = false
+                    showDeleteDialog = false
                     tripToDelete = null
                 }) {
                     Text("Smazat")
@@ -201,7 +158,7 @@ fun TripsScreen(navController: NavHostController){
             },
             dismissButton = {
                 TextButton(onClick = {
-                    showDialog = false
+                    showDeleteDialog = false
                     tripToDelete = null
                 }) {
                     Text("Zrušit")
@@ -209,5 +166,64 @@ fun TripsScreen(navController: NavHostController){
             }
         )
     }
+}
 
+@Composable
+fun TripCard(
+    trip: Trip,
+    navController: NavHostController,
+    onEdit: () -> Unit,
+    onDelete: () -> Unit
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 8.dp)
+            .clickable { navController.navigate("tripDetail/${trip.id}") },
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.primaryContainer
+        )
+    ) {
+        Column(
+            modifier = Modifier
+                .padding(16.dp)
+                .fillMaxWidth()
+        ) {
+            Text(
+                text = trip.title,
+                style = MaterialTheme.typography.titleLarge,
+                modifier = Modifier.padding(bottom = 8.dp)
+            )
+            Text(
+                text = "📅 Datum: ${trip.date}",
+                style = MaterialTheme.typography.bodyMedium,
+                modifier = Modifier.padding(bottom = 4.dp)
+            )
+            Text(
+                text = "📍 Místo: ${trip.location}",
+                style = MaterialTheme.typography.bodyMedium,
+                modifier = Modifier.padding(bottom = 12.dp)
+            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.End,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                IconButton(onClick = onEdit) {
+                    Icon(
+                        imageVector = Icons.Default.Edit,
+                        contentDescription = "Upravit výpravu",
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                }
+                IconButton(onClick = onDelete) {
+                    Icon(
+                        imageVector = Icons.Default.Delete,
+                        contentDescription = "Smazat výpravu",
+                        tint = MaterialTheme.colorScheme.error
+                    )
+                }
+            }
+        }
+    }
 }
