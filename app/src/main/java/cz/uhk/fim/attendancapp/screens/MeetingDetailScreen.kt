@@ -26,7 +26,7 @@ fun MeetingDetailScreen(meetingId: Int, navController: NavHostController) {
     val viewModel: MeetingsViewModel = koinViewModel()
     val meetings by viewModel.meetings.collectAsState()
     val meeting = meetings.find { it.id == meetingId }
-    val participants = viewModel.participants
+    val participants by viewModel.participants.collectAsState(initial = emptyList())
 
     LaunchedEffect(Unit) {
         viewModel.loadMeetings()

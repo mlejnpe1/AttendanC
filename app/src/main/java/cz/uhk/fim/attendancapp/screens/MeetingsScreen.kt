@@ -49,6 +49,7 @@ fun MeetingsScreen(navController: NavHostController) {
     var meetingToEdit by remember { mutableStateOf<Meeting?>(null) }
     var showSnackbar by remember { mutableStateOf(false) }
     val snackbarHostState = remember { SnackbarHostState() }
+    val participants by viewModel.participants.collectAsState(initial = emptyList())
 
     LaunchedEffect(Unit) {
         viewModel.loadMeetings()
@@ -160,11 +161,11 @@ fun MeetingsScreen(navController: NavHostController) {
         AddMeetingDialog(
             onDismiss = { showDialog = false },
             onSave = { newMeeting ->
-                val participants = viewModel.participants.map { participant ->
+                val participantsList = participants.map { participant ->
                     MeetingParticipant(participantId = participant.id, isPresent = false)
                 }
                 val meetingWithParticipants = if (newMeeting.participants.isEmpty()) {
-                    newMeeting.copy(participants = participants)
+                    newMeeting.copy(participants = participantsList)
                 } else {
                     newMeeting
                 }

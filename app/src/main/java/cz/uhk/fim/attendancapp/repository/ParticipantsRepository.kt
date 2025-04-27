@@ -1,15 +1,13 @@
 package cz.uhk.fim.attendancapp.repository
 
+import cz.uhk.fim.attendancapp.data.local.ParticipantsDataStore
 import cz.uhk.fim.attendancapp.model.Participant
+import kotlinx.coroutines.flow.Flow
 
-class ParticipantsRepository {
-    private val participants = listOf(
-        Participant(1, "Alice"),
-        Participant(2, "Bob"),
-        Participant(3, "Charlie"),
-        Participant(4, "David"),
-        Participant(5, "Eva")
-    )
+class ParticipantsRepository (private val dataStore: ParticipantsDataStore){
+    fun getAllParticipants(): Flow<List<Participant>> = dataStore.getParticipants()
 
-    fun getAllParticipants(): List<Participant> = participants
+    suspend fun saveParticipants(participants: List<Participant>){
+        dataStore.saveParticipants(participants)
+    }
 }

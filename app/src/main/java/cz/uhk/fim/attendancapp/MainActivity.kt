@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -27,6 +28,7 @@ import cz.uhk.fim.attendancapp.di.appModule
 import cz.uhk.fim.attendancapp.screens.HomeScreen
 import cz.uhk.fim.attendancapp.screens.MeetingDetailScreen
 import cz.uhk.fim.attendancapp.screens.MeetingsScreen
+import cz.uhk.fim.attendancapp.screens.ParticipantsScreen
 import cz.uhk.fim.attendancapp.screens.TripDetailScreen
 import cz.uhk.fim.attendancapp.screens.TripsScreen
 import cz.uhk.fim.attendancapp.ui.theme.AttendancAppTheme
@@ -62,11 +64,17 @@ fun MainScreen(navController: NavHostController) {
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.primary,
                     titleContentColor = Color.White,
-                    navigationIconContentColor = Color.White
+                    navigationIconContentColor = Color.White,
+                    actionIconContentColor = Color.White
                 ),
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Zpět")
+                    }
+                },
+                actions = {
+                    IconButton(onClick = { navController.navigate("participants") }) {
+                        Icon(Icons.Default.Settings, contentDescription = "Účastníci")
                     }
                 }
             )
@@ -86,6 +94,7 @@ fun Navigation(navController: NavHostController, innerPadding: PaddingValues) {
         composable("home") { HomeScreen(navController) }
         composable("meetings") { MeetingsScreen(navController) }
         composable("trips") { TripsScreen(navController) }
+        composable("participants") { ParticipantsScreen(navController) }
         composable("meetingDetail/{meetingId}") { backStackEntry ->
             val meetingId = backStackEntry.arguments?.getString("meetingId")?.toIntOrNull()
             if (meetingId != null) {
