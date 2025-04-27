@@ -4,5 +4,6 @@ data class Meeting(
     val id: Int,
     val title: String,
     val date: String,
-    val description: String
+    val description: String,
+    val participants: List<MeetingParticipant> = emptyList()
 )

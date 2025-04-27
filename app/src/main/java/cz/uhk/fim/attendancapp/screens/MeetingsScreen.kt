@@ -36,6 +36,7 @@ import androidx.navigation.NavHostController
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import cz.uhk.fim.attendancapp.model.Meeting
+import cz.uhk.fim.attendancapp.model.MeetingParticipant
 import cz.uhk.fim.attendancapp.viewmodel.MeetingsViewModel
 import org.koin.androidx.compose.koinViewModel
 
@@ -116,6 +117,12 @@ fun MeetingsScreen(navController: NavHostController) {
                                 modifier = Modifier.padding(bottom = 12.dp)
                             )
 
+                            Text(
+                                text = "👥 Účast: ${meeting.participants.count { it.isPresent }}/${meeting.participants.size}",
+                                style = MaterialTheme.typography.bodyMedium,
+                                modifier = Modifier.padding(bottom = 12.dp)
+                            )
+
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.End,
@@ -153,13 +160,22 @@ fun MeetingsScreen(navController: NavHostController) {
         AddMeetingDialog(
             onDismiss = { showDialog = false },
             onSave = { newMeeting ->
-                val updatedMeetings = meetings.map { existingMeeting ->
-                    if (existingMeeting.id == newMeeting.id) newMeeting else existingMeeting
+                val participants = viewModel.participants.map { participant ->
+                    MeetingParticipant(participantId = participant.id, isPresent = false)
                 }
-                val finalMeetings = if (meetings.any { it.id == newMeeting.id }) {
+                val meetingWithParticipants = if (newMeeting.participants.isEmpty()) {
+                    newMeeting.copy(participants = participants)
+                } else {
+                    newMeeting
+                }
+
+                val updatedMeetings = meetings.map { existingMeeting ->
+                    if (existingMeeting.id == meetingWithParticipants.id) meetingWithParticipants else existingMeeting
+                }
+                val finalMeetings = if (meetings.any { it.id == meetingWithParticipants.id }) {
                     updatedMeetings
                 } else {
-                    meetings + newMeeting
+                    meetings + meetingWithParticipants
                 }
                 viewModel.saveMeetings(finalMeetings)
                 showDialog = false
