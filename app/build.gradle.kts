@@ -17,6 +17,10 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        buildConfigField("String", "WEATHER_API_KEY", "\"${project.properties["WEATHER_API_KEY"]}\"")
+        buildConfigField("String", "LAT", "\"${project.properties["LAT"]}\"")
+        buildConfigField("String", "LON", "\"${project.properties["LON"]}\"")
     }
 
     buildTypes {
@@ -68,4 +72,10 @@ dependencies {
 
     implementation(libs.androidx.datastore.preferences)
     implementation("com.google.code.gson:gson:2.10.1")
+
+    implementation ("com.squareup.retrofit2:retrofit:2.9.0")
+    implementation ("com.squareup.retrofit2:converter-gson:2.9.0")
+
+    implementation("io.coil-kt:coil-compose:2.4.0")
+
 }

@@ -38,34 +38,27 @@ import androidx.compose.ui.Alignment
 import cz.uhk.fim.attendancapp.model.Meeting
 import cz.uhk.fim.attendancapp.model.MeetingParticipant
 import cz.uhk.fim.attendancapp.viewmodel.MeetingsViewModel
+import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
 fun MeetingsScreen(navController: NavHostController) {
     val viewModel: MeetingsViewModel = koinViewModel()
     val meetings by viewModel.meetings.collectAsState(initial = emptyList())
+    val participants by viewModel.participants.collectAsState(initial = emptyList())
     var showDialog by remember { mutableStateOf(false) }
     var meetingToDelete by remember { mutableStateOf<Meeting?>(null) }
     var meetingToEdit by remember { mutableStateOf<Meeting?>(null) }
     var showSnackbar by remember { mutableStateOf(false) }
+
     val snackbarHostState = remember { SnackbarHostState() }
-    val participants by viewModel.participants.collectAsState(initial = emptyList())
+    val coroutineScope = rememberCoroutineScope()
 
     LaunchedEffect(Unit) {
         viewModel.loadMeetings()
     }
 
     Scaffold(
-        snackbarHost = {
-            Box(modifier = Modifier.fillMaxSize()) {
-                SnackbarHost(
-                    hostState = snackbarHostState,
-                    modifier = Modifier
-                        .align(Alignment.TopCenter)
-                        .padding(top = 64.dp)
-                )
-            }
-        },
         floatingActionButton = {
             FloatingActionButton(onClick = {
                 meetingToEdit = null
@@ -73,6 +66,11 @@ fun MeetingsScreen(navController: NavHostController) {
             }) {
                 Icon(Icons.Default.Add, contentDescription = "Přidat schůzku")
             }
+        },
+        bottomBar = {
+                SnackbarHost(
+                    hostState = snackbarHostState
+                )
         }
     ) { innerPadding ->
         Column(
@@ -86,77 +84,24 @@ fun MeetingsScreen(navController: NavHostController) {
 
             LazyColumn {
                 items(meetings) { meeting ->
-                    Card(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 8.dp)
-                            .clickable { navController.navigate("meetingDetail/${meeting.id}") },
-                        colors = CardDefaults.cardColors(
-                            containerColor = MaterialTheme.colorScheme.secondaryContainer
-                        )
-                    ) {
-                        Column(
-                            modifier = Modifier
-                                .padding(16.dp)
-                                .fillMaxWidth()
-                        ) {
-                            Text(
-                                text = meeting.title,
-                                style = MaterialTheme.typography.titleLarge,
-                                modifier = Modifier.padding(bottom = 8.dp)
-                            )
-
-                            Text(
-                                text = "📅 Datum: ${meeting.date}",
-                                style = MaterialTheme.typography.bodyMedium,
-                                modifier = Modifier.padding(bottom = 4.dp)
-                            )
-
-                            Text(
-                                text = "📝 Popis: ${meeting.description}",
-                                style = MaterialTheme.typography.bodyMedium,
-                                modifier = Modifier.padding(bottom = 12.dp)
-                            )
-
-                            Text(
-                                text = "👥 Účast: ${meeting.participants.count { it.isPresent }}/${meeting.participants.size}",
-                                style = MaterialTheme.typography.bodyMedium,
-                                modifier = Modifier.padding(bottom = 12.dp)
-                            )
-
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.End,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                IconButton(onClick = {
-                                    meetingToEdit = meeting
-                                    showDialog = true
-                                }) {
-                                    Icon(
-                                        imageVector = Icons.Default.Edit,
-                                        contentDescription = "Upravit schůzku",
-                                        tint = MaterialTheme.colorScheme.primary
-                                    )
-                                }
-                                IconButton(onClick = {
-                                    meetingToDelete = meeting
-                                    showDialog = true
-                                }) {
-                                    Icon(
-                                        imageVector = Icons.Default.Delete,
-                                        contentDescription = "Smazat schůzku",
-                                        tint = MaterialTheme.colorScheme.error
-                                    )
-                                }
-                            }
+                    MeetingCard(
+                        meeting = meeting,
+                        navController = navController,
+                        onEdit = {
+                            meetingToEdit = meeting
+                            showDialog = true
+                        },
+                        onDelete = {
+                            meetingToDelete = meeting
+                            showDialog = true
                         }
-                    }
+                    )
                 }
             }
         }
     }
 
+    // Dialog pro přidání / editaci
     if (showDialog) {
         AddMeetingDialog(
             onDismiss = { showDialog = false },
@@ -188,16 +133,23 @@ fun MeetingsScreen(navController: NavHostController) {
         )
     }
 
+    // Snackbar zobrazení
     if (showSnackbar) {
-        LaunchedEffect(snackbarHostState) {
-            snackbarHostState.showSnackbar("Schůzka byla úspěšně uložena!")
-            showSnackbar = false
+        LaunchedEffect(Unit) {
+            coroutineScope.launch {
+                snackbarHostState.showSnackbar("Schůzka byla úspěšně uložena!")
+                showSnackbar = false
+            }
         }
     }
 
-    if (showDialog && meetingToDelete != null) {
+    // Dialog pro smazání
+    if (meetingToDelete != null) {
         AlertDialog(
-            onDismissRequest = { showDialog = false },
+            onDismissRequest = {
+                showDialog = false
+                meetingToDelete = null
+            },
             title = { Text("Smazat schůzku") },
             text = { Text("Opravdu chceš smazat schůzku '${meetingToDelete!!.title}'?") },
             confirmButton = {
@@ -218,5 +170,71 @@ fun MeetingsScreen(navController: NavHostController) {
                 }
             }
         )
+    }
+}
+
+@Composable
+fun MeetingCard(
+    meeting: Meeting,
+    navController: NavHostController,
+    onEdit: () -> Unit,
+    onDelete: () -> Unit
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 8.dp)
+            .clickable { navController.navigate("meetingDetail/${meeting.id}") },
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.secondaryContainer
+        )
+    ) {
+        Column(
+            modifier = Modifier
+                .padding(16.dp)
+                .fillMaxWidth()
+        ) {
+            Text(
+                text = meeting.title,
+                style = MaterialTheme.typography.titleLarge,
+                modifier = Modifier.padding(bottom = 8.dp)
+            )
+            Text(
+                text = "📅 Datum: ${meeting.date}",
+                style = MaterialTheme.typography.bodyMedium,
+                modifier = Modifier.padding(bottom = 4.dp)
+            )
+            Text(
+                text = "📝 Popis: ${meeting.description}",
+                style = MaterialTheme.typography.bodyMedium,
+                modifier = Modifier.padding(bottom = 12.dp)
+            )
+            Text(
+                text = "👥 Účast: ${meeting.participants.count { it.isPresent }}/${meeting.participants.size}",
+                style = MaterialTheme.typography.bodyMedium,
+                modifier = Modifier.padding(bottom = 12.dp)
+            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.End,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                IconButton(onClick = onEdit) {
+                    Icon(
+                        imageVector = Icons.Default.Edit,
+                        contentDescription = "Upravit schůzku",
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                }
+                IconButton(onClick = onDelete) {
+                    Icon(
+                        imageVector = Icons.Default.Delete,
+                        contentDescription = "Smazat schůzku",
+                        tint = MaterialTheme.colorScheme.error
+                    )
+                }
+            }
+        }
+
     }
 }

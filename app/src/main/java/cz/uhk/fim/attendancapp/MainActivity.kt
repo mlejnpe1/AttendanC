@@ -23,8 +23,10 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import cz.uhk.fim.attendancapp.di.appModule
+import cz.uhk.fim.attendancapp.di.networkModule
 import cz.uhk.fim.attendancapp.screens.HomeScreen
 import cz.uhk.fim.attendancapp.screens.MeetingDetailScreen
 import cz.uhk.fim.attendancapp.screens.MeetingsScreen
@@ -41,7 +43,7 @@ class MainActivity : ComponentActivity() {
 
         startKoin {
             androidContext(this@MainActivity)
-            modules(appModule)
+            modules(appModule, networkModule)
         }
 
         setContent {
@@ -57,6 +59,9 @@ class MainActivity : ComponentActivity() {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainScreen(navController: NavHostController) {
+    val currentBackStackEntry = navController.currentBackStackEntryAsState()
+    val currentDestination = currentBackStackEntry.value?.destination?.route
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -68,8 +73,10 @@ fun MainScreen(navController: NavHostController) {
                     actionIconContentColor = Color.White
                 ),
                 navigationIcon = {
-                    IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Zpět")
+                    if (currentDestination != "home") {
+                        IconButton(onClick = { navController.popBackStack() }) {
+                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Zpět")
+                        }
                     }
                 },
                 actions = {
