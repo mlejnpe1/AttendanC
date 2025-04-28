@@ -1,8 +1,12 @@
 package cz.uhk.fim.attendancapp
 
+import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
@@ -22,6 +26,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -29,6 +35,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import cz.uhk.fim.attendancapp.di.appModule
 import cz.uhk.fim.attendancapp.di.networkModule
+import cz.uhk.fim.attendancapp.helpers.NotificationHelper
 import cz.uhk.fim.attendancapp.screens.HomeScreen
 import cz.uhk.fim.attendancapp.screens.MeetingDetailScreen
 import cz.uhk.fim.attendancapp.screens.MeetingsScreen
@@ -39,9 +46,16 @@ import cz.uhk.fim.attendancapp.ui.theme.AttendancAppTheme
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.context.startKoin
 
+private lateinit var notificationHelper: NotificationHelper
+
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        notificationHelper = NotificationHelper(this)
+        notificationHelper.createNotificationChannel()
+
+        requestNotificationPermission()
 
         startKoin {
             androidContext(this@MainActivity)
@@ -55,8 +69,39 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
-}
 
+    private fun requestNotificationPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ContextCompat.checkSelfPermission(
+                    this, android.Manifest.permission.POST_NOTIFICATIONS
+                ) != PackageManager.PERMISSION_GRANTED
+            ) {
+                registerForActivityResult(
+                    ActivityResultContracts.RequestPermission()
+                ) { isGranted ->
+                    if (isGranted) {
+                        notificationHelper.sendTripNotification(
+                            title = "Připomínka výpravy",
+                            message = "Nezapomeň na zítřejší výpravu!"
+                        )
+                    } else {
+                        Toast.makeText(this, "Notifikace nejsou povoleny", Toast.LENGTH_SHORT).show()
+                    }
+                }.launch(android.Manifest.permission.POST_NOTIFICATIONS)
+            } else {
+                notificationHelper.sendTripNotification(
+                    title = "Připomínka výpravy",
+                    message = "Nezapomeň na zítřejší výpravu!"
+                )
+            }
+        } else {
+            notificationHelper.sendTripNotification(
+                title = "Připomínka výpravy",
+                message = "Nezapomeň na zítřejší výpravu!"
+            )
+        }
+    }
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
